@@ -2,6 +2,7 @@
 .env
 credentials.json
 config.json  # Добавьте, если используете config.json
+config.json
 
 # Игнорировать логи
 bot.log
