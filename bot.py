@@ -314,4 +314,19 @@ async def process_menu_selection(message: types.Message, state: FSMContext):
             else:
                 # Пользователь не подписан, просим подписаться
                 await message.answer(
-                    f"❌ Для доступаOops! DeepSeek is experiencing high traffic at the moment. Please check back in a little while.Oops! DeepSeek is experiencing high traffic at the moment. Please check back in a little while.
+                    f"❌ Для доступа к разделу '{option}' необходимо подписаться на канал {CHANNEL_NAME}.",
+                    reply_markup=subscribe_keyboard()
+                )
+        except TelegramBadRequest as e:
+            logger.error(f"Ошибка при проверке подписки: {e}")
+            await message.answer(
+                f"❌ Не удалось проверить подписку на канал. Убедитесь, что канал существует и бот имеет доступ к нему."
+            )
+
+# Запуск бота
+async def main():
+    await init_db()
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
