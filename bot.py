@@ -12,6 +12,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import Command, StateFilter
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from aiohttp import web
 from dotenv import load_dotenv
 import os
 
@@ -34,6 +36,9 @@ API_TOKEN = os.getenv("API_TOKEN")
 CHANNEL_ID = os.getenv("CHANNEL_ID")
 CHANNEL_NAME = os.getenv("CHANNEL_NAME")
 ADMIN_ID = int(os.getenv("ADMIN_ID"))
+WEBHOOK_PATH = "/webhook"
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # URL вашего бота на Render
+PORT = int(os.getenv("PORT", 5000))  # Порт для веб-сервера
 
 # Проверяем, что токен загружен
 if not API_TOKEN:
@@ -207,6 +212,7 @@ async def set_main_menu(bot: Bot):
 
 async def on_startup(bot: Bot):
     await set_main_menu(bot)
+    await bot.set_webhook(f"{WEBHOOK_URL}{WEBHOOK_PATH}")
 
 # Обработчики
 @dp.message(Command("start"))
@@ -420,6 +426,10 @@ async def process_broadcast(message: types.Message, state: FSMContext):
     )
     await state.clear()
 
+# Эндпоинт для "пробуждения" бота
+async def handle_ping(request):
+    return web.json_response({"status": "OK"})
+
 # Запуск бота
 async def main():
     try:
@@ -428,7 +438,21 @@ async def main():
         logger.info("База данных инициализирована успешно.")
         logger.info("Запуск бота...")
         await on_startup(bot)
-        await dp.start_polling(bot)
+
+        # Создаем aiohttp приложение
+        app = web.Application()
+        app.router.add_get("/ping", handle_ping)  # Эндпоинт для "пробуждения"
+        SimpleRequestHandler(dispatcher=dp, bot=bot).register(app, path=WEBHOOK_PATH)
+        setup_application(app, dp, bot=bot)
+
+        # Запуск веб-сервера
+        runner = web.AppRunner(app)
+        await runner.setup()
+        site = web.TCPSite(runner, host="0.0.0.0", port=PORT)
+        await site.start()
+
+        logger.info(f"Бот запущен на порту {PORT}.")
+        await asyncio.Event().wait()  # Бесконечное ожидание
     finally:
         await bot.session.close()
 
