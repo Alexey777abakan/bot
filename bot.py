@@ -326,7 +326,16 @@ async def process_menu_selection(message: types.Message, state: FSMContext):
 # Запуск бота
 async def main():
     await init_db()
-    await dp.start_polling(bot)
+    app = web.Application()
+    webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
+    webhook_requests_handler.register(app, path=WEBHOOK_PATH)
+    setup_application(app, dp, bot=bot)
+    await on_startup(bot)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, host="0.0.0.0", port=PORT)
+    await site.start()
+    await asyncio.Event().wait()
 
 if __name__ == "__main__":
     asyncio.run(main())
