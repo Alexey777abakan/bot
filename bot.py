@@ -33,8 +33,8 @@ logger = logging.getLogger(__name__)
 
 # Данные бота из переменных окружения
 API_TOKEN = os.getenv("API_TOKEN")
-CHANNEL_ID = os.getenv("CHANNEL_ID")
-CHANNEL_NAME = os.getenv("CHANNEL_NAME")
+CHANNEL_ID = "-1001916225390"  # ID вашего канала "Созвездие скидок"
+CHANNEL_NAME = "Созвездие скидок"  # Название вашего канала
 ADMIN_ID = int(os.getenv("ADMIN_ID"))
 WEBHOOK_PATH = "/webhook"
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # URL вашего бота на Render
